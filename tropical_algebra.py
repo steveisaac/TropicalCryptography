@@ -1,17 +1,28 @@
-import numpy
+from numpy import minimum, array
 
 
 def add(x, y):  # Tropical Addition: Elementwise minimum.
-    return numpy.minimum(x, y)
+    return minimum(x, y)
 
 
 def multiply(x, y):  # Tropical Multiplication
-    return numpy.array([[min(i + j) for j in y.T] for i in x])
+    return array([[min(i + j) for j in y.T] for i in x])
 
 
 def adj_multiply(x, y):  # Tropical Adjoint multiplication
     return add(add(x, y), multiply(x, y))
 
 
-def semidirect_product(x, g, y, h):  # Tropical Semidirect Product
-    return add(adj_multiply(x, y), y), adj_multiply(g, h)
+def semigroup_op_1(x, g, y, h):
+    """
+    First semigroup operation from: Tropical cryptography II: Extensions by homomorphisms
+    """
+    return add(adj_multiply(x, h), y), adj_multiply(g, h)
+
+
+def semigroup_op_2(m, g, s, h):
+    """
+    Second semigroup operation from: Tropical cryptography II: Extensions by homomorphisms
+    """
+    return add(add(multiply(h, m.T), multiply(m.T, h)), s), multiply(g, h)
+
