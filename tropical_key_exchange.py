@@ -37,19 +37,19 @@ def compute_intermediaries(matrix_m, matrix_h, exponent_m, mode=1):
     for i in range(len(bin(exponent_m)[2:])-1):
         sq_and_mul.append(semigroup_op(*sq_and_mul[i], *sq_and_mul[i]))
     first_one = True
-    product = None
+    intermediaries = None
     for i in range(len(bin(exponent_m)[2:])):
         if bin(exponent_m)[:1:-1][i] == "1" and first_one:
-            product = sq_and_mul[i]
+            intermediaries = sq_and_mul[i]
             first_one = False
         elif bin(exponent_m)[:1:-1][i] == "1":
-            product = semigroup_op(*product, *sq_and_mul[i])
-    return product
+            intermediaries = semigroup_op(*intermediaries, *sq_and_mul[i])
+    return intermediaries
 
 
-def compute_secret_key(received_matrix, sent_matrix, h_to_power_m, mode=1):
+def compute_secret_key(received_matrix, sent_matrix, h_exp, mode=1):
     if mode == 1:
-        return add(adj_multiply(received_matrix, h_to_power_m), sent_matrix)
+        return add(adj_multiply(received_matrix, h_exp), sent_matrix)
     elif mode == 2:
-        return add(multiply(received_matrix, h_to_power_m), sent_matrix)
+        return add(multiply(received_matrix, h_exp), sent_matrix)
 

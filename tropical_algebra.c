@@ -5,53 +5,33 @@
 
 int main(){
 
-  char inputStr[1024];
-  /*
-     mpz_t is the type defined for GMP integers.
-     It is a pointer to the internals of the GMP integer data structure
-   */
-  mpz_t n;
-  int flag;
+  mpz_t M[30][30];
+  unsigned long seed;
+  printf ("%d\n", seed);
+  gmp_randstate_t rstate;
+  gmp_randinit_mt(rstate);
+  gmp_randseed_ui(rstate, seed);
+  printf ("%d\n", seed);
 
-  printf ("Enter your number: ");
-  scanf("%1023s" , inputStr); /* NOTE: never every write a call scanf ("%s", inputStr);
-                                  You are leaving a security hole in your code. */
+  element_range = 2001
+  for (int i = 0; i < 30; i++) {
+    for (int j = 0; j < 30; j++) {
+      mpz_init2(M[i][j], 64);
+      mpz_urandomm(M[i][j], rstate, 2001);
+      mpz_sub_ui(M[i][j], M[i][j], 1000);
+    }
+  }
 
-  /* 1. Initialize the number */
-  mpz_init(n);
-  mpz_set_ui(n,0);
-
-  /* 2. Parse the input string as a base 10 number */
-  flag = mpz_set_str(n,inputStr, 10);
-  assert (flag == 0); /* If flag is not 0 then the operation failed */
-
-  /* Print n */
-  printf ("n = ");
-  mpz_out_str(stdout,10,n);
-  printf ("\n");
-
-  /* 3. Add one to the number */
-
-  mpz_add_ui(n,n,1); /* n = n + 1 */
-
-  /* 4. Print the result */
-
-  printf (" n +1 = ");
-  mpz_out_str(stdout,10,n);
-  printf ("\n");
+  for (int i = 0; i < 30; i++) {
+    gmp_printf ("%d %z\n", i, M[0][i]);
+  }
 
 
-  /* 5. Square n+1 */
-
-  mpz_mul(n,n,n); /* n = n * n */
 
 
-  printf (" (n +1)^2 = ");
-  mpz_out_str(stdout,10,n);
-  printf ("\n");
-
-
-  /* 6. Clean up the mpz_t handles or else we will leak memory */
-  mpz_clear(n);
-
+  for (int i = 0; i < 30; i++) {
+    for (int j = 0; j < 30; j++) {
+      mpz_clear(M[i][j]);
+    }
+  }
 }
