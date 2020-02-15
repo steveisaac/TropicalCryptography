@@ -8,27 +8,14 @@ def generate_m_h():
     Returns two 30 x 30 matrices filled with random integers from -1000 to 1000 inclusive.
     These are the public matrices M and H.
     """
-    # return (array([[-1 for i in range(30)] for j in range(30)]) for k in range(2))
-    return (
-        array([[randrange(-1000, 1001) for i in range(30)] for j in range(30)], dtype=int) for k in range(2))
+    return ([[randrange(-1000, 1001) for i in range(30)] for j in range(30)] for k in range(2))
 
 
 def generate_exponent():
     """
     Returns the random exponent m on the order of 2^200.
     """
-    return 5
-    # return randrange(2**200, 2**201)
-
-
-"""
-//Use with small exponents to check algorithms
-def check_intermediaries(matrix_m, matrix_h, exponent_m):
-    matrix_a, h_to_power_m = (matrix_m, matrix_h)
-    for i in range(exponent_m-1):
-        matrix_a, h_to_power_m = semigroup_op_1(matrix_a, h_to_power_m, matrix_m, matrix_h)
-    return matrix_a, h_to_power_m
-"""
+    return randrange(2**200, 2**201)
 
 
 def compute_intermediaries(matrix_m, matrix_h, exponent_m, mode=1):

@@ -1,12 +1,27 @@
-from numpy import minimum, array, dtype
-
-
 def add(x, y):  # Tropical Addition: Elementwise minimum.
-    return minimum(x, y)
+    sum = []
+    for i in range(30):
+        sum.append([])
+        for j in range(30):
+            if x[i][j] < y[i][j]:
+                sum[i].append(x[i][j])
+            else:
+                sum[i].append(y[i][j])
+    return sum
+    # return [[a if a < b else b for a, b in zip(i, j)] for i, j in zip(x, y)]
 
 
 def multiply(x, y):  # Tropical Multiplication
-    return array([[min(i + j) for j in y.T] for i in x], dtype=int)
+    result = []
+    for i in range(30):
+        result.append([])
+        for j in range(30):
+            val = 1001
+            for k in range(30):
+                if x[i][k] + y[k][j] < val:
+                    val = x[i][k] + y[k][j]
+            result[i].append(val)
+    return result
 
 
 def adj_multiply(x, y):  # Tropical Adjoint multiplication

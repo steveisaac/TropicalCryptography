@@ -1,4 +1,4 @@
-from numpy import frombuffer, reshape
+import pickle
 import socket
 import sys
 
@@ -38,32 +38,26 @@ class TropicalPeer:
     def exchange_m_h(self):
         if self.server:
             print("Sending initial values")
-            print(self.client_socket.send(self.m))
-            self.client_socket.sendall(self.h)
+            print(self.client_socket.send(pickle.dumps(self.m)))
+            self.client_socket.sendall(pickle.dumps(self.h))
         else:
-            self.m = reshape(frombuffer(self.socket.recv(4096), dtype=int), [30, 30])
-            self.h = reshape(frombuffer(self.socket.recv(4096), dtype=int), [30, 30])
-            # self.m = reshape(frombuffer(self.socket.recv(2048), dtype=dtype(">i2")), [30, 30])
-            # self.h = reshape(frombuffer(self.socket.recv(2048), dtype=dtype(">i2")), [30, 30])
+            self.m = pickle.loads(self.socket.recv(32768))
+            self.h = pickle.loads(self.socket.recv(32768))
             print("Received initial values")
 
     def exchange_a_b(self):
         self.a, self.h_exp = compute_intermediaries(self.m, self.h, self.exponent)
-        print(self.a.shape)
-        print(self.h_exp.shape)
         if self.server:
             print("Sending intermediary values")
-            print(self.client_socket.send(self.a))
-            # self.b = reshape(frombuffer(self.client_socket.recv(8192), dtype=dtype(">i8")), [30, 30])
-            self.b = reshape(frombuffer(self.client_socket.recv(4096), dtype=int), [30, 30])
+            print(self.client_socket.send(pickle.dumps(self.a)))
+            self.b = pickle.loads(self.client_socket.recv(32768))
             print("Received intermediary values")
             self.client_socket.close()
         else:
-            # self.b = reshape(frombuffer(self.socket.recv(8192), dtype=dtype(">i8")), [30, 30])
-            self.b = reshape(frombuffer(self.socket.recv(4096), dtype=int), [30, 30])
+            self.b = pickle.loads(self.socket.recv(32768))
             print("Received intermediary values")
             print("Sending intermediary values")
-            print(self.socket.send(self.a))
+            print(self.socket.send(pickle.dumps(self.a)))
             # self.socket.sendall(self.a)
             print("sent")
         self.socket.close()
@@ -87,15 +81,12 @@ class TropicalPeer:
 # s.close()
 
 if __name__ == "__main__":
-    print(len(sys.argv), *sys.argv[3:])
     T = TropicalPeer(sys.argv[1], *sys.argv[3:])  # check if argv blank None is returned
     T.exchange_m_h()
-    print(type(T.m[0][0]))
     T.exchange_a_b()
-    print(type(T.a[0][0]))
     key = T.derive_key()
     print(key[1])
-    print(type(key[0][0]))
+
     print(T.exponent)
     try:
         output = open(sys.argv[2], "w")
