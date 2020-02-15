@@ -1,4 +1,4 @@
-from numpy import minimum, array
+from numpy import minimum, array, dtype
 
 
 def add(x, y):  # Tropical Addition: Elementwise minimum.
@@ -6,7 +6,7 @@ def add(x, y):  # Tropical Addition: Elementwise minimum.
 
 
 def multiply(x, y):  # Tropical Multiplication
-    return array([[min(i + j) for j in y.T] for i in x])
+    return array([[min(i + j) for j in y.T] for i in x], dtype=int)
 
 
 def adj_multiply(x, y):  # Tropical Adjoint multiplication
