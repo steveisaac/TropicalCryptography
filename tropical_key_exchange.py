@@ -10,7 +10,7 @@ def generate_m_h():
     """
     # return (array([[-1 for i in range(30)] for j in range(30)]) for k in range(2))
     return (
-        array([[randrange(-1000, 1001) for i in range(30)] for j in range(30)], dtype=dtype(">i4")) for k in range(2))
+        array([[randrange(-1000, 1001) for i in range(30)] for j in range(30)], dtype=int) for k in range(2))
 
 
 def generate_exponent():
