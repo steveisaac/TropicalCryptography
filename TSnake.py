@@ -10,6 +10,7 @@ class TropicalPeer:
         self.partnerIP = partnerIP
         self.IP = IP
         self.port = int(port)
+        self.mode = mode
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.exponent = generate_exponent()
         if self.IP > self.partnerIP:
@@ -23,7 +24,7 @@ class TropicalPeer:
             self.server = False
             connected = False
             while not connected:
-                try: # must fix for connection refused
+                try:
                     self.socket.connect((self.partnerIP, self.port))
                     connected = True
                 except ConnectionRefusedError:
@@ -38,63 +39,45 @@ class TropicalPeer:
     def exchange_m_h(self):
         if self.server:
             print("Sending initial values")
-            print(self.client_socket.send(pickle.dumps(self.m)))
+            self.client_socket.sendall(pickle.dumps(self.m))
             self.client_socket.sendall(pickle.dumps(self.h))
         else:
-            self.m = pickle.loads(self.socket.recv(32768))
-            self.h = pickle.loads(self.socket.recv(32768))
+            print("Waiting to receive initial values")
+            self.m = pickle.loads(self.socket.recv(4096))
+            self.h = pickle.loads(self.socket.recv(4096))
             print("Received initial values")
 
     def exchange_a_b(self):
-        self.a, self.h_exp = compute_intermediaries(self.m, self.h, self.exponent)
+        print("Computing intermediary values")
+        self.a, self.h_exp = compute_intermediaries(self.m, self.h, self.exponent, self.mode)
         if self.server:
             print("Sending intermediary values")
-            print(self.client_socket.send(pickle.dumps(self.a)))
+            self.client_socket.sendall(pickle.dumps(self.a))
+            print("Waiting to receive intermediary values")
             self.b = pickle.loads(self.client_socket.recv(32768))
             print("Received intermediary values")
             self.client_socket.close()
         else:
+            print("Waiting to receive intermediary values")
             self.b = pickle.loads(self.socket.recv(32768))
             print("Received intermediary values")
             print("Sending intermediary values")
-            print(self.socket.send(pickle.dumps(self.a)))
-            # self.socket.sendall(self.a)
-            print("sent")
+            self.socket.sendall(pickle.dumps(self.a))
         self.socket.close()
 
     def derive_key(self):
         print("Computing secret key")
         return compute_secret_key(self.b, self.a, self.h_exp)
-        # output file. might want to allow specifying destination. put dest in init file
         # also change random generation to use secrets module
 
 
-# T = TropicalPeer("DESKTOP-K0EJFJJ", "144.32.246.48")
-# T.exchange_m_h()
-# T.exchange_a_b()
-# T.derive_key("haha")
-#
-#
-# s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# s.connect(("DESKTOP-K0EJFJJ", 9699))
-# s.sendall(T.derive_key("haha"))
-# s.close()
-
 if __name__ == "__main__":
-    T = TropicalPeer(sys.argv[1], *sys.argv[3:])  # check if argv blank None is returned
+    T = TropicalPeer(sys.argv[1], *sys.argv[3:])
     T.exchange_m_h()
     T.exchange_a_b()
-    key = T.derive_key()
-    print(key[1])
-
-    print(T.exponent)
     try:
         output = open(sys.argv[2], "w")
         output.write(" ".join([hex(j) for i in T.derive_key() for j in i]))
         output.close()
     except FileExistsError as message:
         print(message)
-
-
-
-

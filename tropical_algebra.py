@@ -1,13 +1,13 @@
 def add(x, y):  # Tropical Addition: Elementwise minimum.
-    sum = []
+    total = []
     for i in range(30):
-        sum.append([])
+        total.append([])
         for j in range(30):
             if x[i][j] < y[i][j]:
-                sum[i].append(x[i][j])
+                total[i].append(x[i][j])
             else:
-                sum[i].append(y[i][j])
-    return sum
+                total[i].append(y[i][j])
+    return total
     # return [[a if a < b else b for a, b in zip(i, j)] for i, j in zip(x, y)]
 
 
@@ -40,4 +40,3 @@ def semigroup_op_2(m, g, s, h):
     Second semigroup operation from: Tropical cryptography II: Extensions by homomorphisms
     """
     return add(add(multiply(h, m.T), multiply(m.T, h)), s), multiply(g, h)
-
