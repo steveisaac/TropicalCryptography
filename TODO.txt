@@ -1,0 +1,10 @@
+hmac message authentification
+
+change key format to something better
+
+see if keys generated with few negative numbers are ok
+
+
+
+
+C implementation
