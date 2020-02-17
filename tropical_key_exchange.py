@@ -19,8 +19,8 @@ def generate_exponent():
     """
     Returns the random exponent m on the order of 2^200.
     """
-    return secrets.randbits(8) + 2**8
-    # return secrets.randbits(200) + 2**200
+    # return secrets.randbits(8) + 2**8
+    return secrets.randbits(200) + 2**200
 
 
 def compute_intermediaries(matrix_m, matrix_h, exponent_m, mode=1):
