@@ -4,6 +4,14 @@ change key format to something better
 
 see if keys generated with few negative numbers are ok
 
+make work without port forwarding ???over IPv6???
+
+
+
+
+
+
+
 
 
 

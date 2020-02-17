@@ -5,7 +5,7 @@ import sys
 from tropical_key_exchange import *
 
 
-class TropicalPeer:
+class TropicalNode:
     def __init__(self, partnerIP, IP=socket.gethostbyname(socket.gethostname()), port='9699', mode=1):
         self.partnerIP = partnerIP
         self.IP = IP
@@ -17,7 +17,7 @@ class TropicalPeer:
         if self.IP > self.partnerIP:
             self.socket.bind((self.IP, self.port))
             self.socket.listen(0)
-            self.client_socket, self.client_address = self.socket.accept()
+            self.client_socket = self.socket.accept()[0]
             self.m, self.h = generate_m_h()
             self.server = True
         # If the IP addresses are the same, whichever node began execution first should be server.
@@ -30,7 +30,7 @@ class TropicalPeer:
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.socket.bind((self.IP, self.port))
                 self.socket.listen(0)
-                self.client_socket, self.client_address = self.socket.accept()
+                self.client_socket = self.socket.accept()[0]
                 self.m, self.h = generate_m_h()
                 self.server = True
         else:
@@ -38,7 +38,6 @@ class TropicalPeer:
             self.server = False
             connected = False
             self.client_socket = None
-            self.client_address = None
             while not connected:
                 try:
                     self.socket.connect((self.partnerIP, self.port))
@@ -88,9 +87,10 @@ class TropicalPeer:
         # also change random generation to use secrets module
 
 
-# Launch with arguments partnerIP
+# Launch with arguments partner IP address, destination filename, opt host IP, opt port, opt mode.
+# Will only work for nodes on same network for now.
 if __name__ == "__main__":
-    T = TropicalPeer(sys.argv[1], *sys.argv[3:])
+    T = TropicalNode(sys.argv[1], *sys.argv[3:])
     T.exchange_m_h()
     T.exchange_a_b()
     i = 0
