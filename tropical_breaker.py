@@ -1,4 +1,5 @@
 from tropical_key_exchange import *
+from numpy import array
 
 
 def breaker(m, h, a):
@@ -12,10 +13,10 @@ def breaker(m, h, a):
         if diffs == diffs_previous:
             offset = i
             print(i, diffs_previous[0][0])
-            break
-            # break_count += 1
-            # if break_count == 20:
-            #     break
+            # break
+            break_count += 1
+            if break_count == 100:
+                break
         m_previous = mi
         diffs_previous = diffs
 
@@ -25,7 +26,11 @@ def breaker(m, h, a):
             if diffs[i][j]:
                 break
     if diffs[i][j]:
-        return (a[i][j] - m[i][j]) // diffs[i][j], offset, a[i][j], m[i][j], (a[i][j] - m[i][j]) % diffs[i][j], (a[i][j] - m_previous[i][j]) // diffs[i][j]
+        a = array(a)
+        m = array(m)
+        diffs = array(diffs)
+        print((a-m)// diffs)
+        # return (a[i][j] - m[i][j]) // diffs[i][j], offset, a[i][j], m[i][j], (a[i][j] - m[i][j]) % diffs[i][j], (a[i][j] - m_previous[i][j]) // diffs[i][j]
     return False
 
 
