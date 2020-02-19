@@ -57,7 +57,7 @@ errors = []
 
 for ii in range(repetitions):
     if (ii + 1) % 100 == 0:
-        print("Iteration: ", ii)
+        print("Iteration: ", ii + 1)
         print("max terms searched: ", max(term_indexes))
         print("max cycle length: ", max(orders))
         print("percentage broken: ", (len(term_indexes) * 100) / (ii + 1), "%")
