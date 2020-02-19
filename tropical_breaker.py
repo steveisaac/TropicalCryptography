@@ -56,7 +56,7 @@ orders = []
 errors = []
 
 for ii in range(repetitions):
-    if ii % 100 == 0 and ii > 0:
+    if (ii + 1) % 100 == 0:
         print("Iteration: ", ii)
         print("max terms searched: ", max(term_indexes))
         print("max cycle length: ", max(orders))
