@@ -40,4 +40,5 @@ def semigroup_op_2(m, g, s, h):
     """
     Second semigroup operation from: Tropical cryptography II: Extensions by homomorphisms
     """
-    return add(add(multiply(h, m.T), multiply(m.T, h)), s), multiply(g, h)
+    # list(zip(*m)) returns the transpose of m
+    return add(add(multiply(h, list(zip(*m))), multiply(list(zip(*m)), h)), s), multiply(g, h)

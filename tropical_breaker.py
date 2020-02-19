@@ -1,20 +1,16 @@
 from tropical_key_exchange import *
 
 
-def breaker(m, h, a, mode=1, max_terms=1000):
-    if mode == 1:
-        semigroup_op = semigroup_op_1
-    elif mode == 2:
-        semigroup_op = semigroup_op_2
+def breaker(m, h, a, max_terms=1000, cycle_max=10, m_order=30):
     mi, hi = m, h
-    diffs = [[None] for i in range(10)]
+    diffs = [[None] for i in range(cycle_max)]
     hi = h
     check_next = False
     set_break = False
     for i in range(max_terms):
         mi_previous = mi
-        mi, hi = semigroup_op(mi, hi, m, h)
-        for j in range(9, 0, -1):
+        mi, hi = semigroup_op_1(mi, hi, m, h)
+        for j in range(cycle_max - 1, 0, -1):
             # slice because otherwise diffs[j] and diffs[j-1] would become pointers to the same list
             diffs[j] = diffs[j-1][:]
         diffs[0] = [[a - b for a, b in zip(i, j)] for i, j in zip(mi, mi_previous)]
@@ -25,12 +21,12 @@ def breaker(m, h, a, mode=1, max_terms=1000):
                 break
             else:
                 check_next = False
-        for j in range(1, 10):
+        for j in range(1, cycle_max):
             if diffs[0] == diffs[j]:
                 offset = i + 2
                 order = j
-                for row in range(30):
-                    for column in range(30):
+                for row in range(m_order):
+                    for column in range(m_order):
                         cycle_sum = sum([diffs[k][row][column] for k in range(order)])
                         if cycle_sum:
                             break
@@ -48,36 +44,37 @@ def breaker(m, h, a, mode=1, max_terms=1000):
             break
     if i == max_terms - 1:
         print("Unbroken/n")
-        print(mi)
-        print(mi_previous)
-        for i in range(10):
-            print()
-            print(diffs[i])
         return False
-    print((((a[row][column] - mi[row][column]) // cycle_sum) * order) + offset + extra == e1, extra)
-    return (((a[row][column] - mi[row][column]) // cycle_sum) * order) + offset + extra, offset - 2
+    # print((((a[row][column] - mi[row][column]) // cycle_sum) * order) + offset + extra == e1, extra)
+    return (((a[row][column] - mi[row][column]) // cycle_sum) * order) + offset + extra, offset - 2, order
 
 
-repetitions = 10000
+repetitions = 1000
 # number of terms to break
-terms_index = []
+term_indexes = []
+orders = []
 errors = []
-mode = 2
+
 for ii in range(repetitions):
-    if ii % 1000 == 0 and ii > 0:
-        print("/nIteration: ", ii, "max: ", max(terms_index),
-              "percentage broken: ", (len(terms_index) * 100) / (ii + 1), "%")
-    m, h = generate_m_h(10)
+    if ii % 100 == 0 and ii > 0:
+        print("Iteration: ", ii)
+        print("max terms searched: ", max(term_indexes))
+        print("max cycle length: ", max(orders))
+        print("percentage broken: ", (len(term_indexes) * 100) / (ii + 1), "%")
+    m, h = generate_m_h(30)
     e1, e2 = (generate_exponent() for ii in range(2))
-    i1, i2 = compute_intermediaries(m, h, e1, mode), compute_intermediaries(m, h, e2, mode)
-    bb = breaker(m, h, i1[0], mode)
+    i1, i2 = compute_intermediaries(m, h, e1), compute_intermediaries(m, h, e2)
+    bb = breaker(m, h, i1[0], 2000, 20)
     if bb:
         if e1 == bb[0]:
-            terms_index.append(bb[1])
+            term_indexes.append(bb[1])
+            orders.append(bb[2])
         else:
             errors.append([m, h, e1, e2, i1, i2, bb])
             print(bb[1], e1)
     else:
         errors.append((m, h, i1[0]))
 
-print("max: ", max(terms_index), "percentage broken: ", (len(terms_index) * 100) / repetitions, "%")
+print("max terms searched: ", max(term_indexes))
+print("max cycle length: ", max(orders))
+print("percentage broken: ", (len(term_indexes) * 100) / repetitions, "%")
