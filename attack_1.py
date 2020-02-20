@@ -1,7 +1,7 @@
 from tropical_key_exchange import *
 
 
-def breaker(m, h, a, max_terms=1000, cycle_max=10, m_order=30):
+def attack_1(m, h, a, max_terms=1000, cycle_max=10, m_order=30):
     mi, hi = m, h
     diffs = [[None] for i in range(cycle_max)]
     hi = h
@@ -49,32 +49,34 @@ def breaker(m, h, a, max_terms=1000, cycle_max=10, m_order=30):
     return (((a[row][column] - mi[row][column]) // cycle_sum) * order) + offset + extra, offset - 2, order
 
 
-repetitions = 1000
-# number of terms to break
-term_indexes = []
-orders = []
-errors = []
+def test_attack(matrix_order=30, max_terms=1500, cycle_max=15, reps=10000):
+    term_indexes = []
+    orders = []
+    errors = []
 
-for ii in range(repetitions):
-    if (ii + 1) % 100 == 0:
-        print("Iteration: ", ii + 1)
-        print("max terms searched: ", max(term_indexes))
-        print("max cycle length: ", max(orders))
-        print("percentage broken: ", (len(term_indexes) * 100) / (ii + 1), "%")
-    m, h = generate_m_h(30)
-    e1, e2 = (generate_exponent() for ii in range(2))
-    i1, i2 = compute_intermediaries(m, h, e1), compute_intermediaries(m, h, e2)
-    bb = breaker(m, h, i1[0], 2000, 20)
-    if bb:
-        if e1 == bb[0]:
-            term_indexes.append(bb[1])
-            orders.append(bb[2])
+    for i in range(reps):
+        m, h = generate_m_h(matrix_order)
+        e1, e2 = (generate_exponent() for i in range(2))
+        i1, i2 = compute_intermediaries(m, h, e1), compute_intermediaries(m, h, e2)
+        a = attack_1(m, h, i1[0], max_terms, cycle_max)
+        if a:
+            if e1 == a[0]:
+                term_indexes.append(a[1])
+                orders.append(a[2])
+            else:
+                errors.append((m, h, i1[0]))
+                print("Incorrect attack return", a[1], e1)
         else:
-            errors.append([m, h, e1, e2, i1, i2, bb])
-            print(bb[1], e1)
-    else:
-        errors.append((m, h, i1[0]))
+            errors.append((m, h, i1[0]))
+            print("Attack could not find exponent")
+        if (i + 1) % 100 == 0:
+            print("Iteration: ", i + 1)
+            print("Percentage broken: ", (len(term_indexes) * 100) / (i + 1), "%")
+            print("Max terms searched: ", max(term_indexes))
+            print("Max cycle length: ", max(orders))
 
-print("max terms searched: ", max(term_indexes))
-print("max cycle length: ", max(orders))
-print("percentage broken: ", (len(term_indexes) * 100) / repetitions, "%")
+    print("Matrix order:", matrix_order)
+    print("Repetitions:", reps)
+    print("Percentage broken:", (len(term_indexes) * 100) / reps, "%")
+    print("Max terms searched:", max(term_indexes))
+    print("Max cycle length:", max(orders))
