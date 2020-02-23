@@ -3,24 +3,28 @@ import secrets
 from tropical_algebra import *
 
 
-def generate_m_h(order):
+def generate_m_h(order=30, element_max=1000, include_positives=True, include_zero=True):
     """
-    Returns two 30 x 30 matrices filled with random integers from -1000 to 1000 inclusive.
+    Returns two order x order matrices filled with random integers.
     These are the public matrices M and H.
     """
-    # Array with very few negative numbers
-    # l, m = ([[randrange(0, 1001) for i in range(30)] for j in range(30)] for k in range(2))
-    # l[2][2] = -1
-    # return l,m
-    return ([[secrets.randbelow(2001) - 1000 for i in range(order)] for j in range(order)] for k in range(2))
+    if include_zero:
+        if include_positives:
+            return ([[secrets.randbelow((element_max * 2) + 1) - element_max for i in range(order)]
+                     for j in range(order)] for k in range(2))
+        return ([[-secrets.randbelow(element_max + 1) for i in range(order)] for j in range(order)] for k in range(2))
+    else:
+        if include_positives:
+            return ([[(secrets.randbelow(element_max) + 1) * (1 - (secrets.randbelow(2) * 2)) for i in range(order)]
+                     for j in range(order)] for k in range(2))
+        return ([[-secrets.randbelow(element_max) - 1 for i in range(order)] for j in range(order)] for k in range(2))
 
 
-def generate_exponent():
+def generate_exponent(order=200):
     """
     Returns the random exponent m on the order of 2^200.
     """
-    # return secrets.randbits(8) + 2**8
-    return secrets.randbits(200) + 2**200
+    return secrets.randbits(order) + 2**order
 
 
 def compute_intermediaries(matrix_m, matrix_h, exponent_m, mode=1):

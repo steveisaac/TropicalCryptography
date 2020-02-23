@@ -1,12 +1,12 @@
 from tropical_key_exchange import *
 
 
-def attack_1(m, h, a, max_terms=1000, cycle_max=10, m_order=30):
+def attack_1(m, h, a, max_terms=1000, cycle_max=10):
     mi, hi = m, h
     diffs = [[None] for i in range(cycle_max)]
     hi = h
     check_next = False
-    set_break = False
+    # set_break = False
     for i in range(max_terms):
         mi_previous = mi
         mi, hi = semigroup_op_1(mi, hi, m, h)
@@ -15,7 +15,7 @@ def attack_1(m, h, a, max_terms=1000, cycle_max=10, m_order=30):
             diffs[j] = diffs[j-1][:]
         diffs[0] = [[a - b for a, b in zip(i, j)] for i, j in zip(mi, mi_previous)]
         if check_next:
-            if diffs[0] == diffs[order]:
+            if diffs[0] == diffs[seq_order]:
                 offset = i + 2
 
                 break
@@ -24,38 +24,40 @@ def attack_1(m, h, a, max_terms=1000, cycle_max=10, m_order=30):
         for j in range(1, cycle_max):
             if diffs[0] == diffs[j]:
                 offset = i + 2
-                order = j
-                for row in range(m_order):
-                    for column in range(m_order):
-                        cycle_sum = sum([diffs[k][row][column] for k in range(order)])
+                seq_order = j
+                for row in range(len(m)):
+                    for column in range(len(m[0])):
+                        cycle_sum = sum([diffs[k][row][column] for k in range(seq_order)])
                         if cycle_sum:
-                            break
-                    if cycle_sum:
-                        break
-
-                for k in range(order):
-                    if (a[row][column] - mi[row][column] - sum([diffs[(order - 1) - l][row][column] for l in range(k)])) % cycle_sum == 0:
-                        extra = k
-                        set_break = True
-                        break
-                if set_break:
-                    break
-        if set_break:
-            break
-    if i == max_terms - 1:
-        print("Unbroken/n")
-        return False
+                            for k in range(seq_order):
+                                if (a[row][column] - mi[row][column] - sum([diffs[(seq_order - 1) - l][row][column]
+                                                                            for l in range(k)])) % cycle_sum == 0:
+                                    """
+                                    i + 2 is number of iterations to reach mi
+                                    k is number of elements from cycle needed to find a after whole cycles
+                                    have been added
+                                    """
+                                    return ((((a[row][column] - mi[row][column]) // cycle_sum) * seq_order) + i + 2 + k,
+                                            i, seq_order)
+    print("Unbroken")
+    print(i)
+    print(cycle_sum)
+    print(j)
+    print(mi)
+    print(diffs[0])
+    print(diffs[j])
+    return False
     # print((((a[row][column] - mi[row][column]) // cycle_sum) * order) + offset + extra == e1, extra)
-    return (((a[row][column] - mi[row][column]) // cycle_sum) * order) + offset + extra, offset - 2, order
 
 
-def test_attack(matrix_order=30, max_terms=1500, cycle_max=15, reps=10000):
+def test_attack(max_terms=1500, cycle_max=15, reps=10000,
+                matrix_order=30, element_max=1000, include_positives=True, include_zero=True):
     term_indexes = []
     orders = []
     errors = []
 
     for i in range(reps):
-        m, h = generate_m_h(matrix_order)
+        m, h = generate_m_h(matrix_order, element_max, include_positives, include_zero)
         e1, e2 = (generate_exponent() for i in range(2))
         i1, i2 = compute_intermediaries(m, h, e1), compute_intermediaries(m, h, e2)
         a = attack_1(m, h, i1[0], max_terms, cycle_max)
@@ -77,6 +79,11 @@ def test_attack(matrix_order=30, max_terms=1500, cycle_max=15, reps=10000):
 
     print("Matrix order:", matrix_order)
     print("Repetitions:", reps)
-    print("Percentage broken:", (len(term_indexes) * 100) / reps, "%")
+    print("Number broken:", (len(term_indexes) * 100) / reps, "%")
     print("Max terms searched:", max(term_indexes))
     print("Max cycle length:", max(orders))
+    print("Cycle occurrences:")
+    for i in set(orders):
+        print(i, ":", orders.count(i))
+
+    return errors
