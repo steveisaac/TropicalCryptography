@@ -1,7 +1,7 @@
 from tropical_key_exchange import *
 
 
-def attack_1(m, h, a, max_terms=1000, cycle_max=10):
+def attack_1(m, h, a, max_terms=30000, cycle_max=20):
     mi, hi = m, h
     diffs = [[None] for i in range(cycle_max)]
     hi = h
@@ -50,14 +50,14 @@ def attack_1(m, h, a, max_terms=1000, cycle_max=10):
     # print((((a[row][column] - mi[row][column]) // cycle_sum) * order) + offset + extra == e1, extra)
 
 
-def test_attack(max_terms=1500, cycle_max=15, reps=10000,
-                matrix_order=30, element_max=1000, include_positives=True, include_zero=True):
+def test_attack(reps=10000, max_terms=30000, cycle_max=20,
+                matrix_order=30, element_magnitude=1000, include_positives=True, include_zero=True):
     term_indexes = []
     orders = []
     errors = []
 
     for i in range(reps):
-        m, h = generate_m_h(matrix_order, element_max, include_positives, include_zero)
+        m, h = generate_m_h(matrix_order, element_magnitude, include_positives, include_zero)
         e1, e2 = (generate_exponent() for i in range(2))
         i1, i2 = compute_intermediaries(m, h, e1), compute_intermediaries(m, h, e2)
         a = attack_1(m, h, i1[0], max_terms, cycle_max)
