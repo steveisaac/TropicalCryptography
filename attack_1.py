@@ -5,8 +5,6 @@ def attack_1(m, h, a, max_terms=30000, cycle_max=20):
     mi, hi = m, h
     diffs = [[None] for i in range(cycle_max)]
     hi = h
-    check_next = False
-    # set_break = False
     for i in range(max_terms):
         mi_previous = mi
         mi, hi = semigroup_op_1(mi, hi, m, h)
@@ -14,13 +12,6 @@ def attack_1(m, h, a, max_terms=30000, cycle_max=20):
             # slice because otherwise diffs[j] and diffs[j-1] would become pointers to the same list
             diffs[j] = diffs[j-1][:]
         diffs[0] = [[a - b for a, b in zip(i, j)] for i, j in zip(mi, mi_previous)]
-        if check_next:
-            if diffs[0] == diffs[seq_order]:
-                offset = i + 2
-
-                break
-            else:
-                check_next = False
         for j in range(1, cycle_max):
             if diffs[0] == diffs[j]:
                 offset = i + 2
@@ -40,12 +31,6 @@ def attack_1(m, h, a, max_terms=30000, cycle_max=20):
                                     return ((((a[row][column] - mi[row][column]) // cycle_sum) * seq_order) + i + 2 + k,
                                             i, seq_order)
     print("Unbroken")
-    print(i)
-    print(cycle_sum)
-    print(j)
-    print(mi)
-    print(diffs[0])
-    print(diffs[j])
     return False
     # print((((a[row][column] - mi[row][column]) // cycle_sum) * order) + offset + extra == e1, extra)
 
