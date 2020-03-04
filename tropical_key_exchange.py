@@ -3,21 +3,31 @@ import secrets
 from tropical_algebra import *
 
 
-def generate_m_h(order=30, element_max=1000, include_positives=True, include_zero=True):
+# def generate_m_h(order=30, element_max=1000, include_positives=True, include_zero=True):
+#     """
+#     Returns two order x order matrices filled with random integers.
+#     These are the public matrices M and H.
+#     """
+#     if include_zero:
+#         if include_positives:
+#             return ([[secrets.randbelow((element_max * 2) + 1) - element_max for i in range(order)]
+#                      for j in range(order)] for k in range(2))
+#         return ([[-secrets.randbelow(element_max + 1) for i in range(order)] for j in range(order)] for k in range(2))
+#     else:
+#         if include_positives:
+#             return ([[(secrets.randbelow(element_max) + 1) * (1 - (secrets.randbelow(2) * 2)) for i in range(order)]
+#                      for j in range(order)] for k in range(2))
+#         return ([[-secrets.randbelow(element_max) - 1 for i in range(order)] for j in range(order)] for k in range(2))
+
+
+def generate_m_h(order=30, m_min=-1000, m_max=1000, h_min=-1000, h_max=1000):
     """
     Returns two order x order matrices filled with random integers.
     These are the public matrices M and H.
     """
-    if include_zero:
-        if include_positives:
-            return ([[secrets.randbelow((element_max * 2) + 1) - element_max for i in range(order)]
-                     for j in range(order)] for k in range(2))
-        return ([[-secrets.randbelow(element_max + 1) for i in range(order)] for j in range(order)] for k in range(2))
-    else:
-        if include_positives:
-            return ([[(secrets.randbelow(element_max) + 1) * (1 - (secrets.randbelow(2) * 2)) for i in range(order)]
-                     for j in range(order)] for k in range(2))
-        return ([[-secrets.randbelow(element_max) - 1 for i in range(order)] for j in range(order)] for k in range(2))
+    m = [[secrets.randbelow((m_max - m_min) + 1) + m_min for i in range(order)] for j in range(order)]
+    h = [[secrets.randbelow((h_max - h_min) + 1) + h_min for i in range(order)] for j in range(order)]
+    return m, h
 
 
 def generate_exponent(order=200):

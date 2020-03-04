@@ -14,7 +14,6 @@ def attack_1(m, h, a, max_terms=30000, cycle_max=20):
         diffs[0] = [[a - b for a, b in zip(i, j)] for i, j in zip(mi, mi_previous)]
         for j in range(1, cycle_max):
             if diffs[0] == diffs[j]:
-                offset = i + 2
                 seq_order = j
                 for row in range(len(m)):
                     for column in range(len(m[0])):
@@ -23,26 +22,30 @@ def attack_1(m, h, a, max_terms=30000, cycle_max=20):
                             for k in range(seq_order):
                                 if (a[row][column] - mi[row][column] - sum([diffs[(seq_order - 1) - l][row][column]
                                                                             for l in range(k)])) % cycle_sum == 0:
-                                    """
-                                    i + 2 is number of iterations to reach mi
-                                    k is number of elements from cycle needed to find a after whole cycles
-                                    have been added
-                                    """
-                                    return ((((a[row][column] - mi[row][column]) // cycle_sum) * seq_order) + i + 2 + k,
-                                            i, seq_order)
+                                    exp = (((a[row][column] - mi[row][column]) // cycle_sum) * seq_order) + i + 2 + k
+                                    # sometimes the mod can be zero with an incorrect exponent (very rare)
+                                    # below section also slows the attack considerably
+                                    # but the attack still finishes in minutes
+                                    if compute_intermediaries(m, h, exp)[0] == a:
+                                        """
+                                        i + 2 is number of iterations to reach mi
+                                        k is number of elements from cycle needed to find a after whole cycles
+                                        have been added
+                                        """
+                                        return exp, i, seq_order
     print("Unbroken")
     return False
     # print((((a[row][column] - mi[row][column]) // cycle_sum) * order) + offset + extra == e1, extra)
 
 
-def test_attack(reps=10000, max_terms=30000, cycle_max=20,
-                matrix_order=30, element_magnitude=1000, include_positives=True, include_zero=True):
+def test_attack(reps=10000, max_terms=100000, cycle_max=30,
+                matrix_order=30, m_min=-1000, m_max=1000, h_min=-1000, h_max=1000):
     term_indexes = []
     orders = []
     errors = []
 
     for i in range(reps):
-        m, h = generate_m_h(matrix_order, element_magnitude, include_positives, include_zero)
+        m, h = generate_m_h(matrix_order, m_min, m_max, h_min, h_max)
         e1, e2 = (generate_exponent() for i in range(2))
         i1, i2 = compute_intermediaries(m, h, e1), compute_intermediaries(m, h, e2)
         a = attack_1(m, h, i1[0], max_terms, cycle_max)
@@ -64,7 +67,7 @@ def test_attack(reps=10000, max_terms=30000, cycle_max=20,
 
     print("Matrix order:", matrix_order)
     print("Repetitions:", reps)
-    print("Number broken:", (len(term_indexes) * 100) / reps, "%")
+    print("Number broken:", len(term_indexes))
     print("Max terms searched:", max(term_indexes))
     print("Max cycle length:", max(orders))
     print("Cycle occurrences:")
