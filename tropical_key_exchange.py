@@ -3,23 +3,6 @@ import secrets
 from tropical_algebra import *
 
 
-# def generate_m_h(order=30, element_max=1000, include_positives=True, include_zero=True):
-#     """
-#     Returns two order x order matrices filled with random integers.
-#     These are the public matrices M and H.
-#     """
-#     if include_zero:
-#         if include_positives:
-#             return ([[secrets.randbelow((element_max * 2) + 1) - element_max for i in range(order)]
-#                      for j in range(order)] for k in range(2))
-#         return ([[-secrets.randbelow(element_max + 1) for i in range(order)] for j in range(order)] for k in range(2))
-#     else:
-#         if include_positives:
-#             return ([[(secrets.randbelow(element_max) + 1) * (1 - (secrets.randbelow(2) * 2)) for i in range(order)]
-#                      for j in range(order)] for k in range(2))
-#         return ([[-secrets.randbelow(element_max) - 1 for i in range(order)] for j in range(order)] for k in range(2))
-
-
 def generate_m_h(order=30, m_min=-1000, m_max=1000, h_min=-1000, h_max=1000):
     """
     Returns two order x order matrices filled with random integers.
@@ -37,10 +20,11 @@ def generate_exponent(order=200):
     return secrets.randbits(order) + 2**order
 
 
+# Computes intermediaries with square-and-multiply method utilising associative property of semigroup operation
 def compute_intermediaries(matrix_m, matrix_h, exponent_m, mode=1):
     if mode == 1:
         semigroup_op = semigroup_op_1
-    elif mode == 2:
+    else:
         semigroup_op = semigroup_op_2
     sq_and_mul = [(matrix_m, matrix_h)]
     for i in range(len(bin(exponent_m)[2:])-1):
@@ -56,10 +40,12 @@ def compute_intermediaries(matrix_m, matrix_h, exponent_m, mode=1):
     return intermediaries
 
 
+# Use to check intermediaries without square-and-multiply method
+# Only viable for small exponents
 def verify_intermediaries(m, h, exponent, mode=1):
     if mode == 1:
         semigroup_op = semigroup_op_1
-    elif mode == 2:
+    else:
         semigroup_op = semigroup_op_2
     intermediaries = m, h
     for i in range(exponent - 1):
