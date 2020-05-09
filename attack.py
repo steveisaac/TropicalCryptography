@@ -2,15 +2,15 @@ from tropical_key_exchange import *
 
 
 def attack(m, h, a, max_terms=30000, cycle_max=20):
-    """
-    The attack works by finding the point in which the elementwise differences between (M, H)^i-1 and (M, H)^i begin
-    to cycle. The exponent from which A is generated can then be derived from A, the point at which the cycle began,
-    and the values of the cyclic elementwise differences.
-
-    I have not yet found an M H A combination which is not vulnerable to this attack
-    """
+    #
+    # The attack works by finding the point at which the elementwise differences between (M, H)^i-1 and (M, H)^i begin
+    # to cycle. The exponent from which A is generated can then be derived from A, the point at which the cycle began,
+    # and the values of the cyclic elementwise differences.
+    #
+    # We have not yet found an M, H, A combination which is not vulnerable to this attack
+    #
     mi, hi = m, h
-    diff_hists = [[[None]] for i in range(cycle_max)]
+    hist_diffs = [[[None]] for i in range(cycle_max)]
     hi = h
     for i in range(2, max_terms + 2):
         # (M, H)^i-1
@@ -18,29 +18,42 @@ def attack(m, h, a, max_terms=30000, cycle_max=20):
         # (M, H)^i
         mi, hi = semigroup_op_1(mi, hi, m, h)
 
-        # Elementwise difference between (M, H)^i and (M, H)^i-1
+        # Matrix of elementwise differences between (M, H)^i and (M, H)^i-1
         diff = [[mi_val - mip_val for mi_val, mip_val in zip(mi_row, mip_row)]
                 for mi_row, mip_row in zip(mi, mi_previous)]
 
-        for j in range(cycle_max):
-            # Check if the current elementwise difference is equal to a historic elementwise difference
-            if diff == diff_hists[j]:
-                seq_order = j + 1
+        for hist_index in range(cycle_max):
+            # Check if the current elementwise difference is equal to a historic elementwise difference matrix
+            if diff == hist_diffs[hist_index]:
+                cycle_order = hist_index + 1
                 # Sum of the elements at position [0, 0] in the cycle of elementwise differences
-                cycle_sum = sum([diff_hists[k][0][0] for k in range(seq_order)])
-                for k in range(seq_order):
-                    # The below if statement is a quick means of filtering out local cycles
-                    if (a[0][0] - mi[0][0] - sum(
-                            [diff_hists[(seq_order - 1) - l][0][0] for l in range(k)])) % cycle_sum == 0:
-                        exp = (((a[0][0] - mi[0][0]) // cycle_sum) * seq_order) + i + k
-                        # The below if statement filters out any local cycles that slip through the last.
-                        # It is only necessary in rare cases and is costly.
-                        if compute_intermediaries(m, h, exp)[0] == a:
-                            return exp, i, seq_order
+                cycle_sum = sum([hist_diffs[index][0][0] for index in range(cycle_order)])
+                for j in range(cycle_order):
+                    # Sum of a section at the start of the cycle
+                    section_sum = sum([hist_diffs[cycle_order - 1 - index][0][0] for index in range(j)])
 
-        # Remove oldest difference and add current difference to difference histories
-        diff_hists.pop()
-        diff_hists.insert(0, diff)
+                    # The below statement derives a possible difference between the first element of A and (M, H)^i
+                    #
+                    # The reason multiple candidates need to be tested is that the element of the difference cycle
+                    # that is equal to (M, H)^exp - (M, H)^exp-1 is unknown
+                    candidate_difference = a[0][0] - mi[0][0] - section_sum
+
+                    # If cycle_sum divides candidate_difference evenly it is the true difference between A and (M, H)^i
+                    # There are very rare exceptions to this where candidate_difference can be divided by the true
+                    # value as well as a false value
+                    if candidate_difference % cycle_sum == 0:
+
+                        # Exponent is (floor(A - (M, H)^i / cycle sum) * cycle order) + i + j
+                        exp = (((a[0][0] - mi[0][0]) // cycle_sum) * cycle_order) + i + j
+
+                        # The below if statement filters out aforementioned exceptions
+                        # This is achieved by checking to see if (M, H)^exp gives A
+                        if compute_intermediaries(m, h, exp)[0] == a:
+                            return exp, i, cycle_order
+
+        # Remove oldest difference matrix from and add current matrix to historic differences
+        hist_diffs.pop()
+        hist_diffs.insert(0, diff)
 
     # If max terms are reached without finding exponent False is returned
     # Try attacking again with increased max terms and cycle max
@@ -85,6 +98,3 @@ def test_attack(reps=10000, max_terms=100000, cycle_max=30,
         print(i, ":", orders.count(i))
 
     return errors
-
-
-

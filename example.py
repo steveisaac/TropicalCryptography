@@ -15,6 +15,10 @@ def example(dimensions=30):
     derived_exponent = attack(m, h, a)
     if derived_exponent:
         print(f'Attack derived exponent: {derived_exponent[0]}')
+        if derived_exponent[0] == exponent:
+            print('Attack successful')
+        else:
+            print('Attack failed')
     else:
         print('Attack failed')
 
