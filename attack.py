@@ -1,7 +1,9 @@
+from numpy import array, zeros
+
 from tropical_key_exchange import *
 
 
-def attack(m, h, a, max_terms=30000, cycle_max=20):
+def attack(m, h, a, max_terms=None, cycle_max=None):
     #
     # The attack works by finding the point at which the elementwise differences between (M, H)^i-1 and (M, H)^i begin
     # to cycle. The exponent from which A is generated can then be derived from A, the point at which the cycle began,
@@ -9,6 +11,10 @@ def attack(m, h, a, max_terms=30000, cycle_max=20):
     #
     # We have not yet found an M, H, A combination which is not vulnerable to this attack
     #
+    if max_terms is None:
+        max_terms = 100000
+    if cycle_max is None:
+        cycle_max = 2 * len(m)
     mi, hi = m, h
     hist_diffs = [[[None]] for i in range(cycle_max)]
     hi = h
@@ -26,25 +32,36 @@ def attack(m, h, a, max_terms=30000, cycle_max=20):
             # Check if the current elementwise difference is equal to a historic elementwise difference matrix
             if diff == hist_diffs[hist_index]:
                 cycle_order = hist_index + 1
-                # Sum of the elements at position [0, 0] in the cycle of elementwise differences
-                cycle_sum = sum([hist_diffs[index][0][0] for index in range(cycle_order)])
+                # Sum of the matrices in the cycle of elementwise differences
+                cycle_sum = sum([array(hist_diffs[index]) for index in range(cycle_order)])
+                # Checks for special case where the cycle sum is the zero matrix
+                zero_check = cycle_sum == zeros(cycle_sum.shape)
+                if zero_check.all():
+                    return True, i, 1
+                # Locates non-zero element in cycle sum
+                for row in range(len(cycle_sum)):
+                    for column in range(len(cycle_sum)):
+                        if cycle_sum[row][column]:
+                            break
+                    if cycle_sum[row][column]:
+                        break
                 for j in range(cycle_order):
                     # Sum of a section at the start of the cycle
-                    section_sum = sum([hist_diffs[cycle_order - 1 - index][0][0] for index in range(j)])
+                    section_sum = sum([hist_diffs[cycle_order - 1 - index][row][column] for index in range(j)])
 
                     # The below statement derives a possible difference between the first element of A and (M, H)^i
                     #
                     # The reason multiple candidates need to be tested is that the element of the difference cycle
                     # that is equal to (M, H)^exp - (M, H)^exp-1 is unknown
-                    candidate_difference = a[0][0] - mi[0][0] - section_sum
+                    candidate_difference = a[row][column] - mi[row][column] - section_sum
 
                     # If cycle_sum divides candidate_difference evenly it is the true difference between A and (M, H)^i
                     # There are very rare exceptions to this where candidate_difference can be divided by the true
                     # value as well as a false value
-                    if candidate_difference % cycle_sum == 0:
+                    if candidate_difference % cycle_sum[row][column] == 0:
 
                         # Exponent is (floor(A - (M, H)^i / cycle sum) * cycle order) + i + j
-                        exp = (((a[0][0] - mi[0][0]) // cycle_sum) * cycle_order) + i + j
+                        exp = (((a[row][column] - mi[row][column]) // cycle_sum[row][column]) * cycle_order) + i + j
 
                         # The below if statement filters out aforementioned exceptions
                         # This is achieved by checking to see if (M, H)^exp gives A
@@ -61,40 +78,10 @@ def attack(m, h, a, max_terms=30000, cycle_max=20):
     return False
 
 
-def test_attack(reps=10000, max_terms=100000, cycle_max=30,
-                matrix_order=30, m_min=-1000, m_max=1000, h_min=-1000, h_max=1000):
-    term_indexes = []
-    orders = []
-    errors = []
-
-    for i in range(reps):
-        m, h = generate_m_h(matrix_order, m_min, m_max, h_min, h_max)
-        e1, e2 = (generate_exponent() for i in range(2))
-        i1, i2 = compute_intermediaries(m, h, e1), compute_intermediaries(m, h, e2)
-        a = attack(m, h, i1[0], max_terms, cycle_max)
-        if a:
-            if e1 == a[0]:
-                term_indexes.append(a[1])
-                orders.append(a[2])
-            else:
-                errors.append((m, h, i1[0]))
-                print("Incorrect attack return", a[1], e1)
+def crack_key(m, h, a, max_terms=None, cycle_max=None):
+    vals = attack(m, h, a, max_terms=None, cycle_max=None)
+    if vals:
+        if vals is True:
+            return compute_secret_key(m, h, len(m)**2)
         else:
-            errors.append((m, h, i1[0]))
-            print("Attack could not find exponent")
-        if (i + 1) % 100 == 0:
-            print("Iteration: ", i + 1)
-            print("Percentage broken: ", (len(term_indexes) * 100) / (i + 1), "%")
-            print("Max terms searched: ", max(term_indexes))
-            print("Max cycle length: ", max(orders))
-
-    print("Matrix order:", matrix_order)
-    print("Repetitions:", reps)
-    print("Number broken:", len(term_indexes))
-    print("Max terms searched:", max(term_indexes))
-    print("Max cycle length:", max(orders))
-    print("Cycle occurrences:")
-    for i in set(orders):
-        print(i, ":", orders.count(i))
-
-    return errors
+            return compute_secret_key(m, h, vals[0])
