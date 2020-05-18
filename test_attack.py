@@ -20,16 +20,8 @@ def test_attack(reps=10000, max_terms=100000, max_period=30,
         end_time = process_time()
         times.append(end_time-start_time)
         if derived_a:
-            if derived_a[0] is True:
-                term_indexes.append(derived_a[1])
-                orders.append(derived_a[2])
-            else:
-                if a == derived_a[0]:
-                    term_indexes.append(derived_a[1])
-                    orders.append(derived_a[2])
-                else:
-                    errors.append((m, h, m_a))
-                    print("Incorrect attack return", derived_a[1], a)
+            term_indexes.append(derived_a[1])
+            orders.append(derived_a[2])
         else:
             errors.append((m, h, m_a))
             print("Attack could not find exponent")
