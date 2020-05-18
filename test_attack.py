@@ -4,7 +4,7 @@ from attack import attack
 from tropical_key_exchange import *
 
 
-def test_attack(reps=10000, max_terms=100000, cycle_max=30,
+def test_attack(reps=10000, max_terms=100000, max_period=30,
                 matrix_order=30, m_min=-1000, m_max=1000, h_min=-1000, h_max=1000):
     term_indexes = []
     orders = []
@@ -16,12 +16,11 @@ def test_attack(reps=10000, max_terms=100000, cycle_max=30,
         a = generate_exponent()
         m_a, _ = compute_intermediaries(m, h, a)
         start_time = process_time()
-        derived_a = attack(m, h, m_a, max_terms, cycle_max)
+        derived_a = attack(m, h, m_a, max_terms, max_period)
         end_time = process_time()
         times.append(end_time-start_time)
         if derived_a:
-            if derived_a is True:
-                print("Zero_diffs")
+            if derived_a[0] is True:
                 term_indexes.append(derived_a[1])
                 orders.append(derived_a[2])
             else:
