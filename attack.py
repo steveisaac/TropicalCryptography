@@ -18,7 +18,7 @@ def attack(m, h, m_a, max_terms=None, max_period=None):
         max_period = 2 * len(m)
     m_n, h_n = m, h
     hist_diffs = [[[None]] for i in range(max_period)]
-    h_n = h
+
     for n in range(2, max_terms + 2):
         # (M, H)^n-1
         m_n_previous = m_n
@@ -40,33 +40,36 @@ def attack(m, h, m_a, max_terms=None, max_period=None):
                 if zero_check.all():
                     if compute_intermediaries(m, h, n)[0] == m_a:
                         return n, n, 1
+                # Removed as all elements will be non-zero if one is
                 # Locates non-zero element in period_sum
-                for i in range(len(period_sum)):
-                    for j in range(len(period_sum)):
-                        if period_sum[i][j]:
-                            row = i
-                            column = j
-                            break
-                    if period_sum[i][j]:
-                        break
+                # for i in range(len(period_sum)):
+                #     for j in range(len(period_sum)):
+                #         if period_sum[i][j]:
+                #             row = i
+                #             column = j
+                #             break
+                #     if period_sum[i][j]:
+                #         break
+
+                # the below section operates on just the first element in the matrices as it is more efficient
                 for k in range(period):
                     # Sum of a section at the start of the cycle
-                    section_sum = sum([hist_diffs[period - 1 - index][row][column] for index in range(k)])
+                    section_sum = sum([hist_diffs[period - 1 - index][0][0] for index in range(k)])
 
                     # The below statement derives a possible difference between the first element of A and (M, H)^n
                     #
                     # The reason multiple candidates need to be tested is that the element of the difference cycle
                     # that is equal to (M, H)^a - (M, H)^a-1 is unknown
-                    candidate_difference = m_a[row][column] - m_n[row][column] - section_sum
+                    candidate_difference = m_a[0][0] - m_n[0][0] - section_sum
 
                     # If period_sum divides candidate_difference evenly it is the true difference between M_a
                     # and (M, H)^n
                     # There may be very rare exceptions to this where a false candidate_difference can be divided evenly
                     # by the period_sum as well as the true one.
-                    if candidate_difference % period_sum[row][column] == 0:
+                    if candidate_difference % period_sum[0][0] == 0:
 
                         # Exponent is ((M_a - (M, H)^n / cycle sum) * cycle order) + n + k
-                        a = (((m_a[row][column] - m_n[row][column]) // period_sum[row][column]) * period) + n + k
+                        a = (((m_a[0][0] - m_n[0][0]) // period_sum[0][0]) * period) + n + k
 
                         # The below if statement filters out aforementioned exceptions
                         # This is achieved by checking to see if (M, H)^a gives M_a
@@ -83,9 +86,9 @@ def attack(m, h, m_a, max_terms=None, max_period=None):
     return False
 
 
-def crack_key(m, h, m_a, m_b, max_terms=None, cycle_max=None):
+def crack_key(m, h, m_a, m_b, max_terms=None, max_period=None):
     try:
-        a = attack(m, h, m_a, max_terms=None, max_period=None)[0]
+        a = attack(m, h, m_a, max_terms, max_period)[0]
         m_a, h_a = compute_intermediaries(m, h, a)
         return compute_secret_key(m_b, m_a, h_a)
     except TypeError:
