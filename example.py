@@ -5,8 +5,8 @@ from attack import attack
 
 
 def example(dimensions=30):
-    # m, h = generate_m_h(dimensions)
-    m, h = generate_m_h(dimensions, h_min=0, m_min=0)
+    m, h = generate_m_h(dimensions)
+    # m, h = generate_m_h(dimensions, h_min=0, m_min=0)
     print(f'Generated M and H with order {dimensions}x{dimensions}')
     a = generate_exponent()
     print(f'Generated a: {a}')
