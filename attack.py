@@ -60,13 +60,13 @@ def attack(m, h, m_a, max_terms=None, max_period=None):
                     #
                     # The reason multiple candidates need to be tested is that the element of the difference cycle
                     # that is equal to (M, H)^a - (M, H)^a-1 is unknown
-                    candidate_difference = m_a[0][0] - m_n[0][0] - section_sum
+                    candidate = m_a[0][0] - m_n[0][0] - section_sum
 
-                    # If period_sum divides candidate_difference evenly it is the true difference between M_a
+                    # If period_sum divides candidate evenly it is the true difference between M_a
                     # and (M, H)^n
-                    # There may be very rare exceptions to this where a false candidate_difference can be divided evenly
+                    # There may be very rare exceptions to this where a false candidate can be divided evenly
                     # by the period_sum as well as the true one.
-                    if candidate_difference % period_sum[0][0] == 0:
+                    if candidate % period_sum[0][0] == 0:
 
                         # Exponent is ((M_a - (M, H)^n / cycle sum) * cycle order) + n + k
                         a = (((m_a[0][0] - m_n[0][0]) // period_sum[0][0]) * period) + n + k
